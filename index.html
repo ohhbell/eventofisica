@@ -12,127 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Ícones da Lucide (para um visual minimalista) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-    
-    <style>
-        /* style.css */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-        }
-
-        /* Estilo da barra de navegação */
-        .navbar {
-            background-color: #fff;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .navbar-brand {
-            font-weight: 600;
-            color: #0d6efd;
-        }
-
-        .nav-link {
-            font-weight: 400;
-            margin-right: 1rem;
-            position: relative;
-            color: #333;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            color: #0d6efd;
-        }
-
-        .nav-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: #0d6efd;
-        }
-
-        /* Seção Hero */
-        .hero {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://placehold.co/1920x1080/0d6efd/ffffff?text=EVENTO+TECH');
-            background-size: cover;
-            background-position: center;
-            height: 100vh;
-            padding-top: 5rem;
-        }
-
-        .hero .display-3 {
-            font-weight: 600;
-        }
-
-        .hero .btn {
-            border-radius: 50px;
-            padding: 0.75rem 2rem;
-        }
-
-        /* Seções gerais */
-        section {
-            padding: 5rem 0;
-        }
-
-        .bg-light {
-            background-color: #f8f9fa !important;
-        }
-
-        .card {
-            border-radius: 1rem;
-            border: none;
-        }
-
-        .list-group-item {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border-radius: 1rem;
-        }
-
-        .list-group-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        .badge {
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-            border-radius: 50px;
-            font-weight: 600;
-        }
-
-        /* Títulos */
-        h2 {
-            position: relative;
-            padding-bottom: 0.5rem;
-        }
-
-        h2::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 3px;
-            background-color: #0d6efd;
-            border-radius: 5px;
-        }
-        
-        .status-badge {
-            font-weight: bold;
-            padding: 0.5em 1em;
-            border-radius: 1rem;
-            font-size: 0.85em;
-        }
-        
-        .status-badge.status-Aprovado { background-color: #d4edda; color: #155724; }
-        .status-badge.status-Rejeitado { background-color: #f8d7da; color: #721c24; }
-        .status-badge.status-Aguardando { background-color: #fff3cd; color: #856404; }
-
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body data-bs-spy="scroll" data-bs-target="#main-nav" data-bs-root-margin="0px" data-bs-smooth-scroll="true" tabindex="0">
 
@@ -165,6 +45,14 @@
                     </li>
                     <li class="nav-item d-none" id="logoutNavLink">
                         <button class="nav-link btn btn-link" id="logoutBtn">Sair</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link btn btn-link" id="signInWithGoogleBtn">
+                            <i class="ti ti-brand-google me-2"></i>Login Google
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#adminLoginModal" id="showLoginModalBtn">Login Admin</a>
                     </li>
                 </ul>
             </div>
@@ -232,6 +120,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-6">
                     <div class="card p-4 shadow-sm rounded-3">
+                        <p class="text-center text-muted">Faça login com o Google para se inscrever no evento.</p>
                         <form id="inscricaoForm">
                             <div class="mb-3">
                                 <label for="nomeInscricao" class="form-label">Nome Completo</label>
@@ -266,6 +155,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <div class="card p-4 shadow-sm rounded-3">
+                        <p class="text-center text-muted">Faça login com o Google para submeter seu artigo.</p>
                         <form id="submissaoForm">
                             <div class="mb-3">
                                 <label for="tituloArtigo" class="form-label">Título do Artigo</label>
@@ -292,15 +182,14 @@
             </div>
         </div>
     </section>
-    
-    <!-- Seção: Status do Usuário (Inicialmente Oculto) -->
+
+    <!-- Seção: Status do Usuário -->
     <section id="userStatus" class="py-5 d-none">
-        <div class="container">
+        <div class="container" id="userSection">
             <h2 class="text-center mb-5 display-5 fw-bold">Meu Status</h2>
             <div class="alert alert-info" role="alert" id="userStatusMessage">
                 Carregando seus dados...
             </div>
-            
             <!-- Tabela de Inscrições do Usuário -->
             <div class="mb-5">
                 <h3 class="fw-bold text-primary mb-3">Minhas Inscrições</h3>
@@ -320,7 +209,6 @@
                     </table>
                 </div>
             </div>
-
             <!-- Tabela de Submissões do Usuário -->
             <div>
                 <h3 class="fw-bold text-primary mb-3">Minhas Submissões de Artigos</h3>
@@ -347,7 +235,6 @@
     <section id="admin" class="py-5 bg-dark text-white d-none">
         <div class="container">
             <h2 class="text-center mb-5 display-5 fw-bold">Painel Administrativo</h2>
-            
             <!-- Inscrições -->
             <div class="mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -381,7 +268,6 @@
                     </table>
                 </div>
             </div>
-
             <!-- Submissões de Artigos -->
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -409,7 +295,7 @@
                             </tr>
                         </thead>
                         <tbody id="artigosTableBody">
-                            <!-- Artigos serão inseridos aqui dinamicamente -->
+                            <!-- Submissões serão inseridas aqui dinamicamente -->
                             <tr><td colspan="7">Carregando submissões...</td></tr>
                         </tbody>
                     </table>
@@ -418,50 +304,16 @@
         </div>
     </section>
 
-    <!-- Rodapé -->
-    <footer class="bg-dark text-white text-center py-4">
-        <div class="container">
-            <p class="mb-0">&copy; 2025 Evento de Tecnologia. Todos os direitos reservados.</p>
-            <!-- Botão para abrir o modal de login do admin -->
-            <div class="mt-2" id="authButtons">
-                <button class="btn btn-link text-white-50 me-3" data-bs-toggle="modal" data-bs-target="#adminLoginModal" id="showAdminLoginBtn">
-                    Painel Admin
-                </button>
-                <button class="btn btn-primary" id="googleSignInBtn">
-                    <i class="ti ti-brand-google me-2"></i> Login com Google
-                </button>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Modal de Mensagem -->
-    <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="messageModalLabel">Status</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="messageModalBody">
-                    <!-- Mensagem será inserida aqui -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal de Login Admin -->
+    <!-- Modal de Login do Admin -->
     <div class="modal fade" id="adminLoginModal" tabindex="-1" aria-labelledby="adminLoginModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="adminLoginModalLabel">Acesso ao Painel Administrativo</h5>
+                    <h5 class="modal-title" id="adminLoginModalLabel">Login de Administrador</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form id="adminLoginForm">
+                <form id="adminLoginForm">
+                    <div class="modal-body">
                         <div class="mb-3">
                             <label for="adminEmail" class="form-label">E-mail</label>
                             <input type="email" class="form-control" id="adminEmail" required>
@@ -470,439 +322,36 @@
                             <label for="adminPassword" class="form-label">Senha</label>
                             <input type="password" class="form-control" id="adminPassword" required>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Entrar</button>
-                        </div>
-                    </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" class="btn btn-primary">Entrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Mensagem (Feedback) -->
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messageModalLabel">Aviso</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="messageModalBody">
+                    <!-- Mensagem será inserida aqui -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fechar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap JS e seu script -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Firebase SDKs (agora usando módulos) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, serverTimestamp, doc, getDoc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-        // PASSO 1: COLE AQUI A SUA CONFIGURAÇÃO DO FIREBASE
-        // É fundamental que você substitua os valores abaixo pela sua própria configuração.
-        // Se você não o fez, por favor, copie do console do Firebase e cole aqui.
-  const firebaseConfig = {
-    apiKey: "AIzaSyCH8XQfCunSqGXKTMEdM4ZTrq2aRZ0--2o",
-    authDomain: "site-evento.firebaseapp.com",
-    projectId: "site-evento",
-    storageBucket: "site-evento.firebasestorage.app",
-    messagingSenderId: "674144936271",
-    appId: "1:674144936271:web:bae7fb91cac12d4b15253a",
-    measurementId: "G-96P7F28HEE"
-  };
-
-        // Inicializa o Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // Pega referências para os formulários e botões
-        const inscricaoForm = document.getElementById('inscricaoForm');
-        const submissaoForm = document.getElementById('submissaoForm');
-        const fetchInscricoesBtn = document.getElementById('fetchInscricoesBtn');
-        const fetchArtigosBtn = document.getElementById('fetchArtigosBtn');
-        const exportInscricoesBtn = document.getElementById('exportInscricoesBtn');
-        const exportArtigosBtn = document.getElementById('exportArtigosBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const adminLoginForm = document.getElementById('adminLoginForm');
-        const adminPanel = document.getElementById('admin');
-        const userStatusPanel = document.getElementById('userStatus');
-        const googleSignInBtn = document.getElementById('googleSignInBtn');
-
-        // Pega referências para os modais e links de navegação
-        const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
-        const messageModalBody = document.getElementById('messageModalBody');
-        const adminLoginModal = new bootstrap.Modal(document.getElementById('adminLoginModal'));
-        const userStatusNavLink = document.getElementById('userStatusNavLink');
-        const adminNavLink = document.getElementById('adminNavLink');
-        const logoutNavLink = document.getElementById('logoutNavLink');
-        const authButtonsDiv = document.getElementById('authButtons');
-        const userStatusMessage = document.getElementById('userStatusMessage');
-
-        // Variáveis para armazenar os dados de inscricoes e artigos
-        // Isso é crucial para a funcionalidade de exportação
-        let inscricoesData = [];
-        let artigosData = [];
-
-        // --- FUNÇÕES DE LÓGICA DO SITE ---
-
-        // Listener de autenticação para exibir/ocultar elementos
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                authButtonsDiv.classList.add('d-none');
-                logoutNavLink.classList.remove('d-none');
-                checkUserRole(user);
-            } else {
-                authButtonsDiv.classList.remove('d-none');
-                logoutNavLink.classList.add('d-none');
-                userStatusNavLink.classList.add('d-none');
-                adminNavLink.classList.add('d-none');
-                userStatusPanel.classList.add('d-none');
-                adminPanel.classList.add('d-none');
-            }
-        });
-        
-        // Função para verificar o papel do usuário (admin ou comum)
-        async function checkUserRole(user) {
-            try {
-                const adminDocRef = doc(db, 'organizadores', user.uid);
-                const adminDoc = await getDoc(adminDocRef);
-
-                if (adminDoc.exists()) {
-                    // Usuário é um admin
-                    adminNavLink.classList.remove('d-none');
-                    userStatusNavLink.classList.add('d-none'); // Oculta o link de status para admins
-                    adminPanel.classList.remove('d-none');
-                    userStatusPanel.classList.add('d-none'); // Oculta o painel de status
-                    fetchInscricoesAdmin();
-                    fetchArtigosAdmin();
-                } else {
-                    // Usuário é comum
-                    adminNavLink.classList.add('d-none');
-                    userStatusNavLink.classList.remove('d-none');
-                    adminPanel.classList.add('d-none');
-                    userStatusPanel.classList.remove('d-none');
-                    fetchUserStatus(user.uid);
-                }
-            } catch (error) {
-                console.error("Erro ao verificar status do admin: ", error);
-            }
-        }
-        
-        // Função para buscar e exibir o status do usuário comum
-        async function fetchUserStatus(userId) {
-            userStatusMessage.classList.remove('d-none');
-            userStatusMessage.innerHTML = 'Carregando seus dados...';
-            try {
-                // Busca inscrições do usuário
-                const inscricoesQuery = query(collection(db, 'inscricoes'), where('userId', '==', userId));
-                const inscricoesSnapshot = await getDocs(inscricoesQuery);
-                const userInscricoesTableBody = document.getElementById('userInscricoesTableBody');
-                
-                let inscricoesHtml = '';
-                if (inscricoesSnapshot.empty) {
-                    inscricoesHtml = '<tr><td colspan="4">Nenhuma inscrição encontrada para o seu usuário.</td></tr>';
-                } else {
-                    inscricoesSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        inscricoesHtml += `
-                            <tr>
-                                <td>${data.timestamp ? data.timestamp.toDate().toLocaleString('pt-BR') : 'N/A'}</td>
-                                <td>${data.instituicao}</td>
-                                <td>${data.curso}</td>
-                                <td><span class="status-badge status-${data.status}">${data.status}</span></td>
-                            </tr>
-                        `;
-                    });
-                }
-                userInscricoesTableBody.innerHTML = inscricoesHtml;
-
-                // Busca artigos do usuário
-                const artigosQuery = query(collection(db, 'artigos'), where('userId', '==', userId));
-                const artigosSnapshot = await getDocs(artigosQuery);
-                const userArtigosTableBody = document.getElementById('userArtigosTableBody');
-                
-                let artigosHtml = '';
-                if (artigosSnapshot.empty) {
-                    artigosHtml = '<tr><td colspan="4">Nenhuma submissão de artigo encontrada para o seu usuário.</td></tr>';
-                } else {
-                    artigosSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        artigosHtml += `
-                            <tr>
-                                <td>${data.timestamp ? data.timestamp.toDate().toLocaleString('pt-BR') : 'N/A'}</td>
-                                <td>${data.titulo}</td>
-                                <td>${data.autor}</td>
-                                <td>${data.status ? `<span class="status-badge status-${data.status}">${data.status}</span>` : 'N/A'}</td>
-                            </tr>
-                        `;
-                    });
-                }
-                userArtigosTableBody.innerHTML = artigosHtml;
-
-                userStatusMessage.classList.add('d-none');
-
-            } catch (error) {
-                userStatusMessage.innerHTML = 'Ocorreu um erro ao carregar seus dados. Tente novamente.';
-                userStatusMessage.classList.remove('d-none', 'alert-info');
-                userStatusMessage.classList.add('alert-danger');
-                console.error("Erro ao carregar dados do usuário: ", error);
-            }
-        }
-
-
-        // Função para buscar e exibir as inscrições (para admin)
-        async function fetchInscricoesAdmin() {
-            const inscricoesTableBody = document.getElementById('inscricoesTableBody');
-            inscricoesTableBody.innerHTML = '<tr><td colspan="7">Carregando inscrições...</td></tr>';
-            try {
-                const snapshot = await getDocs(collection(db, 'inscricoes'));
-                inscricoesData = []; // Limpa os dados anteriores
-                if (snapshot.empty) {
-                    inscricoesTableBody.innerHTML = '<tr><td colspan="7">Nenhuma inscrição encontrada.</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    inscricoesData.push(data); // Armazena os dados para exportação
-                    html += `
-                        <tr>
-                            <td>${data.nome}</td>
-                            <td>${data.email}</td>
-                            <td>${data.instituicao}</td>
-                            <td>${data.curso}</td>
-                            <td>${data.timestamp ? data.timestamp.toDate().toLocaleString('pt-BR') : 'N/A'}</td>
-                            <td><span class="status-badge status-${data.status}">${data.status}</span></td>
-                            <td>
-                                <button class="btn btn-success btn-sm me-2" onclick="approveEntry('inscricoes', '${doc.id}')">Aprovar</button>
-                                <button class="btn btn-danger btn-sm" onclick="rejectEntry('inscricoes', '${doc.id}')">Rejeitar</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                inscricoesTableBody.innerHTML = html;
-            } catch (error) {
-                inscricoesTableBody.innerHTML = '<tr><td colspan="7">Você não tem permissão para visualizar estes dados. Verifique as regras de segurança.</td></tr>';
-                console.error("Erro ao carregar inscrições: ", error);
-            }
-        }
-
-        // Função para buscar e exibir os artigos (para admin)
-        async function fetchArtigosAdmin() {
-            const artigosTableBody = document.getElementById('artigosTableBody');
-            artigosTableBody.innerHTML = '<tr><td colspan="7">Carregando submissões...</td></tr>';
-            try {
-                const snapshot = await getDocs(collection(db, 'artigos'));
-                artigosData = []; // Limpa os dados anteriores
-                if (snapshot.empty) {
-                    artigosTableBody.innerHTML = '<tr><td colspan="7">Nenhum artigo submetido.</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    artigosData.push(data); // Armazena os dados para exportação
-                    html += `
-                        <tr>
-                            <td>${data.titulo}</td>
-                            <td>${data.autor}</td>
-                            <td>${data.email}</td>
-                            <td>${data.resumo.substring(0, 50)}...</td>
-                            <td>${data.timestamp ? data.timestamp.toDate().toLocaleString('pt-BR') : 'N/A'}</td>
-                            <td><span class="status-badge status-${data.status}">${data.status}</span></td>
-                            <td>
-                                <button class="btn btn-success btn-sm me-2" onclick="approveEntry('artigos', '${doc.id}')">Aprovar</button>
-                                <button class="btn btn-danger btn-sm" onclick="rejectEntry('artigos', '${doc.id}')">Rejeitar</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                artigosTableBody.innerHTML = html;
-            } catch (error) {
-                artigosTableBody.innerHTML = '<tr><td colspan="7">Você não tem permissão para visualizar estes dados. Verifique as regras de segurança.</td></tr>';
-                console.error("Erro ao carregar artigos: ", error);
-            }
-        }
-        
-        // Função para aprovar uma inscrição/submissão (para admin)
-        window.approveEntry = async (collectionName, docId) => {
-            const docRef = doc(db, collectionName, docId);
-            try {
-                await updateDoc(docRef, { status: 'Aprovado' });
-                showMessageModal('success', `Registro aprovado com sucesso!`);
-                if (collectionName === 'inscricoes') {
-                    fetchInscricoesAdmin();
-                } else {
-                    fetchArtigosAdmin();
-                }
-            } catch (error) {
-                showMessageModal('danger', 'Ocorreu um erro ao aprovar o registro. Tente novamente.');
-                console.error("Erro ao aprovar registro: ", error);
-            }
-        };
-
-        // Função para rejeitar uma inscrição/submissão (para admin)
-        window.rejectEntry = async (collectionName, docId) => {
-            const docRef = doc(db, collectionName, docId);
-            try {
-                await updateDoc(docRef, { status: 'Rejeitado' });
-                showMessageModal('warning', `Registro rejeitado com sucesso!`);
-                if (collectionName === 'inscricoes') {
-                    fetchInscricoesAdmin();
-                } else {
-                    fetchArtigosAdmin();
-                }
-            } catch (error) {
-                showMessageModal('danger', 'Ocorreu um erro ao rejeitar o registro. Tente novamente.');
-                console.error("Erro ao rejeitar registro: ", error);
-            }
-        };
-
-        // --- FUNÇÕES DE EXPORTAÇÃO ---
-
-        // Função genérica para exportar uma lista de objetos para um arquivo CSV
-        function exportToCsv(filename, data) {
-            if (!data || data.length === 0) {
-                showMessageModal('warning', 'Não há dados para exportar.');
-                return;
-            }
-            
-            const sanitizedData = data.map(item => {
-                const newItem = { ...item };
-                // Remove o userId e o status do arquivo CSV para fins de limpeza
-                delete newItem.userId;
-                delete newItem.status;
-                return newItem;
-            });
-
-            // Mapeia os cabeçalhos das colunas
-            const headers = Object.keys(sanitizedData[0]);
-            const headerString = headers.join(';');
-
-            // Mapeia os dados para linhas CSV
-            const csvRows = sanitizedData.map(row => 
-                headers.map(header => {
-                    const value = row[header];
-                    // Formata a data para um formato legível
-                    if (header === 'timestamp' && value && value.toDate) {
-                        return value.toDate().toLocaleString('pt-BR');
-                    }
-                    // Trata valores com vírgulas ou aspas
-                    return `"${(value || '').toString().replace(/"/g, '""')}"`;
-                }).join(';')
-            );
-
-            const csvString = [headerString, ...csvRows].join('\n');
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-
-            // Cria um link temporário para download
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.setAttribute('download', filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // --- LISTENERS DE EVENTOS ---
-        
-        googleSignInBtn.addEventListener('click', async () => {
-            const provider = new GoogleAuthProvider();
-            try {
-                await signInWithPopup(auth, provider);
-                showMessageModal('success', 'Login com Google realizado com sucesso!');
-            } catch (error) {
-                showMessageModal('danger', 'Ocorreu um erro ao fazer login com o Google. Verifique o console para mais detalhes.');
-                console.error("Erro de login com Google: ", error);
-            }
-        });
-
-
-        // Adiciona um ouvinte para o formulário de inscrição
-        inscricaoForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const user = auth.currentUser;
-            if (!user) {
-                showMessageModal('danger', 'Você precisa fazer login para se inscrever.');
-                return;
-            }
-            const inscricaoData = {
-                userId: user.uid,
-                nome: document.getElementById('nomeInscricao').value,
-                email: document.getElementById('emailInscricao').value,
-                instituicao: document.getElementById('instituicaoInscricao').value,
-                curso: document.getElementById('cursoInscricao').value,
-                timestamp: serverTimestamp(),
-                status: 'Aguardando'
-            };
-            try {
-                await addDoc(collection(db, 'inscricoes'), inscricaoData);
-                showMessageModal('success', 'Inscrição realizada com sucesso! Você pode verificar o status na sua área.');
-                inscricaoForm.reset();
-            } catch (error) {
-                showMessageModal('danger', 'Ocorreu um erro ao processar a inscrição. Tente novamente.');
-                console.error("Erro ao adicionar documento de inscrição: ", error);
-            }
-        });
-
-        // Adiciona um ouvinte para o formulário de submissão de artigo
-        submissaoForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const user = auth.currentUser;
-            if (!user) {
-                showMessageModal('danger', 'Você precisa fazer login para submeter um artigo.');
-                return;
-            }
-            const artigoData = {
-                userId: user.uid,
-                titulo: document.getElementById('tituloArtigo').value,
-                autor: document.getElementById('autorArtigo').value,
-                email: document.getElementById('emailArtigo').value,
-                resumo: document.getElementById('resumoArtigo').value,
-                timestamp: serverTimestamp(),
-                status: 'Aguardando'
-            };
-            try {
-                await addDoc(collection(db, 'artigos'), artigoData);
-                showMessageModal('success', 'Artigo submetido com sucesso! Você pode verificar o status na sua área.');
-                submissaoForm.reset();
-            } catch (error) {
-                showMessageModal('danger', 'Ocorreu um erro ao submeter o artigo. Tente novamente.');
-                console.error("Erro ao adicionar documento de artigo: ", error);
-            }
-        });
-
-        // Lógica de login e logout
-        adminLoginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('adminEmail').value;
-            const password = document.getElementById('adminPassword').value;
-
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                adminLoginModal.hide();
-                adminLoginForm.reset();
-                showMessageModal('success', 'Login realizado com sucesso!');
-            } catch (error) {
-                showMessageModal('danger', 'E-mail ou senha incorretos.');
-                console.error("Erro de login: ", error);
-            }
-        });
-
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-                showMessageModal('success', 'Você foi desconectado.');
-            } catch (error) {
-                showMessageModal('danger', 'Erro ao fazer logout.');
-                console.error("Erro de logout: ", error);
-            }
-        });
-
-        // Botões de atualização e exportação
-        fetchInscricoesBtn.addEventListener('click', fetchInscricoesAdmin);
-        fetchArtigosBtn.addEventListener('click', fetchArtigosAdmin);
-        exportInscricoesBtn.addEventListener('click', () => exportToCsv('inscricoes.csv', inscricoesData));
-        exportArtigosBtn.addEventListener('click', () => exportToCsv('submissoes_artigos.csv', artigosData));
-
-        // Função para exibir o modal de mensagem
-        function showMessageModal(type, message) {
-            messageModalBody.innerHTML = `<div class="alert alert-${type}" role="alert">${message}</div>`;
-            messageModal.show();
-        }
-    </script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

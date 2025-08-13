@@ -1,8 +1,8 @@
 // PASSO 1: COLE AQUI A SUA CONFIGURAÇÃO DO FIREBASE
 // É fundamental que você substitua os valores abaixo pela sua própria configuração.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 
 // Your web app's Firebase configuration
@@ -20,34 +20,35 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 // Pega referências para os formulários
 const inscricaoForm = document.getElementById('inscricaoForm');
 const submissaoForm = document.getElementById('submissaoForm');
 
-// Pega referências para os botões do painel administrativo
+// Pega referências para os botões e elementos da UI
 const fetchInscricoesBtn = document.getElementById('fetchInscricoesBtn');
 const fetchArtigosBtn = document.getElementById('fetchArtigosBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const exportInscricoesBtn = document.getElementById('exportInscricoesBtn');
 const exportArtigosBtn = document.getElementById('exportArtigosBtn');
+const signInWithGoogleBtn = document.getElementById('signInWithGoogleBtn');
 
-
-// Pega referências para o modal de mensagem
 const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
 const messageModalBody = document.getElementById('messageModalBody');
 
-// Pega referências para o modal de login do admin
 const adminLoginModal = new bootstrap.Modal(document.getElementById('adminLoginModal'));
 const adminLoginForm = document.getElementById('adminLoginForm');
 const adminPanel = document.getElementById('admin');
 
-// Pega referências para os links de navegação
 const adminNavLink = document.getElementById('adminNavLink');
 const logoutNavLink = document.getElementById('logoutNavLink');
 const userStatusNavLink = document.getElementById('userStatusNavLink');
+const userInscricoesTableBody = document.getElementById('userInscricoesTableBody');
+const userArtigosTableBody = document.getElementById('userArtigosTableBody');
+const userSection = document.getElementById('userSection');
 
-// Pega referências para as tabelas do painel administrativo
+
 const inscricoesTableBody = document.getElementById('inscricoesTableBody');
 const artigosTableBody = document.getElementById('artigosTableBody');
 
@@ -57,34 +58,59 @@ let artigosData = [];
 
 
 // Listener de autenticação para exibir/ocultar elementos
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
         // Usuário logado
-        adminNavLink.classList.remove('d-none');
         logoutNavLink.classList.remove('d-none');
+        signInWithGoogleBtn.classList.add('d-none');
         document.getElementById('showLoginModalBtn').classList.add('d-none');
-        adminPanel.classList.remove('d-none');
-        fetchInscricoesAdmin();
-        fetchArtigosAdmin();
-        console.log("Usuário logado:", user.uid);
-        console.log("IMPORTANTE: Copie este UID e adicione-o na coleção 'organizadores' do Firestore para que as regras de segurança permitam o acesso.");
+        userStatusNavLink.classList.remove('d-none');
+        userSection.classList.remove('d-none');
+
+        // Verifica se o usuário é um admin (exemplo simples: checando se o email é o de um admin)
+        // Uma abordagem mais segura seria verificar em uma coleção 'organizadores' no Firestore
+        const isAdmin = user.email === 'admin@event.com'; // Mude para o email do seu admin
+
+        if (isAdmin) {
+            adminNavLink.classList.remove('d-none');
+            adminPanel.classList.remove('d-none');
+            fetchInscricoesAdmin();
+            fetchArtigosAdmin();
+            console.log("Usuário logado como Admin:", user.uid);
+        } else {
+            adminNavLink.classList.add('d-none');
+            adminPanel.classList.add('d-none');
+            console.log("Usuário logado como Normal:", user.uid);
+            fetchUserInscricoes(user.uid);
+            fetchUserArtigos(user.uid);
+        }
+
     } else {
         // Usuário deslogado
-        adminNavLink.classList.add('d-none');
         logoutNavLink.classList.add('d-none');
-        document.getElementById('showLoginModalBtn').classList.remove('d-none');
+        adminNavLink.classList.add('d-none');
         adminPanel.classList.add('d-none');
+        userStatusNavLink.classList.add('d-none');
+        userSection.classList.add('d-none');
+        signInWithGoogleBtn.classList.remove('d-none');
+        document.getElementById('showLoginModalBtn').classList.remove('d-none');
     }
 });
-
 
 // Adiciona um ouvinte de evento para o formulário de inscrição
 inscricaoForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const user = auth.currentUser;
+    if (!user) {
+        showMessageModal('danger', 'Você precisa estar logado para se inscrever.');
+        return;
+    }
+
     const inscricaoData = {
+        userId: user.uid,
+        userEmail: user.email,
         nome: document.getElementById('nomeInscricao').value,
-        email: document.getElementById('emailInscricao').value,
         instituicao: document.getElementById('instituicaoInscricao').value,
         curso: document.getElementById('cursoInscricao').value,
         timestamp: new Date(),
@@ -95,9 +121,12 @@ inscricaoForm.addEventListener('submit', async (e) => {
         await addDoc(collection(db, "inscricoes"), inscricaoData);
         showMessageModal('success', 'Inscrição realizada com sucesso!');
         inscricaoForm.reset();
+        fetchUserInscricoes(user.uid); // Atualiza a lista do usuário
     } catch (error) {
+        // O erro mais comum aqui é por causa das regras de segurança do Firestore.
+        // Verifique se a sua regra permite 'create' para a coleção 'inscricoes' para usuários autenticados.
         console.error("Erro ao adicionar documento: ", error);
-        showMessageModal('danger', 'Ocorreu um erro ao processar a inscrição. Verifique o console para mais detalhes.');
+        showMessageModal('danger', 'Ocorreu um erro ao processar a inscrição. Verifique o console e as regras de segurança do Firebase.');
     }
 });
 
@@ -105,10 +134,17 @@ inscricaoForm.addEventListener('submit', async (e) => {
 submissaoForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const user = auth.currentUser;
+    if (!user) {
+        showMessageModal('danger', 'Você precisa estar logado para submeter um artigo.');
+        return;
+    }
+
     const submissaoData = {
+        userId: user.uid,
+        userEmail: user.email,
         titulo: document.getElementById('tituloArtigo').value,
         autor: document.getElementById('autorArtigo').value,
-        email: document.getElementById('emailArtigo').value,
         resumo: document.getElementById('resumoArtigo').value,
         timestamp: new Date(),
         status: 'Aguardando'
@@ -118,14 +154,76 @@ submissaoForm.addEventListener('submit', async (e) => {
         await addDoc(collection(db, "artigos"), submissaoData);
         showMessageModal('success', 'Submissão de artigo realizada com sucesso!');
         submissaoForm.reset();
+        fetchUserArtigos(user.uid); // Atualiza a lista do usuário
     } catch (error) {
+        // O erro mais comum aqui é por causa das regras de segurança do Firestore.
+        // Verifique se a sua regra permite 'create' para a coleção 'artigos' para usuários autenticados.
         console.error("Erro ao adicionar documento: ", error);
-        showMessageModal('danger', 'Ocorreu um erro ao processar a submissão. Verifique o console para mais detalhes.');
+        showMessageModal('danger', 'Ocorreu um erro ao processar a submissão. Verifique o console e as regras de segurança do Firebase.');
     }
 });
 
 
-// Função para buscar e exibir as inscrições (Painel Admin)
+// Funções para buscar e exibir os dados do USUÁRIO NORMAL
+async function fetchUserInscricoes(userId) {
+    userInscricoesTableBody.innerHTML = '<tr><td colspan="4">Carregando suas inscrições...</td></tr>';
+    try {
+        const q = query(collection(db, 'inscricoes'), where('userId', '==', userId));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            userInscricoesTableBody.innerHTML = '<tr><td colspan="4">Nenhuma inscrição encontrada.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        querySnapshot.forEach(doc => {
+            const data = doc.data();
+            html += `
+                <tr>
+                    <td>${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString('pt-BR') : 'N/A'}</td>
+                    <td>${data.instituicao}</td>
+                    <td>${data.curso}</td>
+                    <td><span class="badge status-badge status-${data.status}">${data.status}</span></td>
+                </tr>
+            `;
+        });
+        userInscricoesTableBody.innerHTML = html;
+    } catch (error) {
+        console.error("Erro ao carregar inscrições do usuário: ", error);
+        userInscricoesTableBody.innerHTML = '<tr><td colspan="4">Erro ao carregar dados. Verifique as regras de segurança.</td></tr>';
+    }
+}
+
+async function fetchUserArtigos(userId) {
+    userArtigosTableBody.innerHTML = '<tr><td colspan="4">Carregando suas submissões...</td></tr>';
+    try {
+        const q = query(collection(db, 'artigos'), where('userId', '==', userId));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            userArtigosTableBody.innerHTML = '<tr><td colspan="4">Nenhuma submissão encontrada.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        querySnapshot.forEach(doc => {
+            const data = doc.data();
+            html += `
+                <tr>
+                    <td>${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString('pt-BR') : 'N/A'}</td>
+                    <td>${data.titulo}</td>
+                    <td>${data.autor}</td>
+                    <td><span class="badge status-badge status-${data.status}">${data.status}</span></td>
+                </tr>
+            `;
+        });
+        userArtigosTableBody.innerHTML = html;
+    } catch (error) {
+        console.error("Erro ao carregar artigos do usuário: ", error);
+        userArtigosTableBody.innerHTML = '<tr><td colspan="4">Erro ao carregar dados. Verifique as regras de segurança.</td></tr>';
+    }
+}
+
+// Funções para buscar e exibir os dados do ADMIN
 async function fetchInscricoesAdmin() {
     inscricoesTableBody.innerHTML = '<tr><td colspan="7">Carregando inscrições...</td></tr>';
     try {
@@ -142,7 +240,7 @@ async function fetchInscricoesAdmin() {
             html += `
                 <tr>
                     <td>${data.nome}</td>
-                    <td>${data.email}</td>
+                    <td>${data.userEmail}</td>
                     <td>${data.instituicao}</td>
                     <td>${data.curso}</td>
                     <td>${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString('pt-BR') : 'N/A'}</td>
@@ -161,13 +259,12 @@ async function fetchInscricoesAdmin() {
     }
 }
 
-// Função para buscar e exibir os artigos (Painel Admin)
 async function fetchArtigosAdmin() {
-    artigosTableBody.innerHTML = '<tr><td colspan="5">Carregando submissões...</td></tr>';
+    artigosTableBody.innerHTML = '<tr><td colspan="7">Carregando submissões...</td></tr>';
     try {
         const querySnapshot = await getDocs(collection(db, 'artigos'));
         if (querySnapshot.empty) {
-            artigosTableBody.innerHTML = '<tr><td colspan="5">Nenhum artigo submetido.</td></tr>';
+            artigosTableBody.innerHTML = '<tr><td colspan="7">Nenhum artigo submetido.</td></tr>';
             return;
         }
 
@@ -179,7 +276,7 @@ async function fetchArtigosAdmin() {
                 <tr>
                     <td>${data.titulo}</td>
                     <td>${data.autor}</td>
-                    <td>${data.email}</td>
+                    <td>${data.userEmail}</td>
                     <td>${data.resumo.substring(0, 50)}...</td>
                     <td>${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString('pt-BR') : 'N/A'}</td>
                     <td><span class="badge status-badge status-${data.status}">${data.status}</span></td>
@@ -192,7 +289,7 @@ async function fetchArtigosAdmin() {
         });
         artigosTableBody.innerHTML = html;
     } catch (error) {
-        artigosTableBody.innerHTML = '<tr><td colspan="5">Você não tem permissão para visualizar estes dados. Verifique as regras de segurança.</td></tr>';
+        artigosTableBody.innerHTML = '<tr><td colspan="7">Você não tem permissão para visualizar estes dados. Verifique as regras de segurança.</td></tr>';
         console.error("Erro ao carregar artigos: ", error);
     }
 }
@@ -231,10 +328,21 @@ adminLoginForm.addEventListener('submit', async (e) => {
         await signInWithEmailAndPassword(auth, email, password);
         adminLoginModal.hide();
         adminLoginForm.reset();
-        showMessageModal('success', 'Login realizado com sucesso!');
+        showMessageModal('success', 'Login de Admin realizado com sucesso!');
     } catch (error) {
         showMessageModal('danger', 'E-mail ou senha incorretos.');
         console.error("Erro de login: ", error);
+    }
+});
+
+// Login com Google
+signInWithGoogleBtn.addEventListener('click', async () => {
+    try {
+        await signInWithPopup(auth, googleProvider);
+        showMessageModal('success', 'Login com Google realizado com sucesso!');
+    } catch (error) {
+        console.error("Erro ao fazer login com o Google: ", error);
+        showMessageModal('danger', 'Ocorreu um erro ao fazer login com o Google. Verifique o console para mais detalhes.');
     }
 });
 
